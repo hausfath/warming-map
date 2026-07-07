@@ -164,6 +164,8 @@ export function showCell(mySeq, { lat, lon, cell }) {
   });
   const latest = [...annual].reverse().findIndex(Number.isFinite);
   const latestIdx = latest === -1 ? null : annual.length - 1 - latest;
+  const absMean = Number.isFinite(cell.absOffset) && Number.isFinite(w)
+    ? smooth[smooth.length - 1] + cell.absOffset : NaN;
 
   el.facts.innerHTML = "";
   const facts = [];
@@ -171,8 +173,8 @@ export function showCell(mySeq, { lat, lon, cell }) {
     facts.push(["Warmest year", `${hotYear} <small>${fmtAnom(hot)} °C</small>`]);
   if (latestIdx !== null)
     facts.push([`${years[latestIdx]} anomaly`, `${fmtAnom(annual[latestIdx])} °C`]);
-  if (Number.isFinite(w))
-    facts.push(["Warming since preindustrial", `${fmtAnom(w)} °C <small>${fmtAnom(w * 9 / 5)} °F</small>`]);
+  if (Number.isFinite(absMean))
+    facts.push(["Current avg. temp", `${absMean.toFixed(1)} °C <small>${(absMean * 9 / 5 + 32).toFixed(1)} °F</small>`]);
   facts.push(["Years of data", `${n} <small>of ${cell.nYears}</small>`]);
   for (const [dt, dd] of facts) {
     const d = document.createElement("div");
