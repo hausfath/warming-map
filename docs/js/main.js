@@ -1,7 +1,8 @@
 // Boot: load config, wire map -> tiles -> panel.
 
 import { initColors, renderLegend } from "./colors.js";
-import { createMap, highlightCell, clearHighlight } from "./map.js";
+import { createMap, highlightCell, clearHighlight, flyToPlace } from "./map.js";
+import { initSearch } from "./search.js";
 import { getCell, cellFromLatLng, cellCenter, supported } from "./tiles.js";
 import { initPanel, showLoading, showCell, showError, closePanel } from "./panel.js";
 
@@ -45,6 +46,11 @@ async function boot() {
   }
 
   createMap((latlng) => selectCell(latlng.lat, latlng.lng));
+
+  initSearch((r) => {
+    flyToPlace(r);
+    selectCell(r.lat, r.lon);
+  });
 
   // Permalink: #lat,lon opens that location on load.
   const m = location.hash.match(/^#(-?[\d.]+),(-?[\d.]+)$/);

@@ -77,6 +77,20 @@ export function highlightCell(cy, cx) {
   );
 }
 
+export function flyToPlace(r) {
+  // Prefer the result's bounding box (extent = [w, n, e, s]) so countries
+  // fill the view while towns get a close-up; clamp so a single 0.25° cell
+  // never fills the whole screen.
+  if (r.extent) {
+    const [w, n, e, s] = r.extent;
+    const b = L.latLngBounds([[s, w], [n, e]]).pad(0.3);
+    const z = Math.min(map.getBoundsZoom(b), 7);
+    map.flyTo(b.getCenter(), Math.max(z, 3), { duration: 0.9 });
+  } else {
+    map.flyTo([r.lat, r.lon], 6, { duration: 0.9 });
+  }
+}
+
 export function clearHighlight() {
   if (highlight) { highlight.remove(); highlight = null; }
 }

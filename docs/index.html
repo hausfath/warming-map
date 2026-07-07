@@ -20,12 +20,18 @@
 <header class="brand card">
   <h1>The Warming Map</h1>
   <p class="tagline">175 years of temperature change, anywhere on Earth</p>
+  <div class="search">
+    <svg class="search-icon" width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><circle cx="5.5" cy="5.5" r="4.2" stroke="currentColor" stroke-width="1.5"/><path d="M8.8 8.8L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <input id="search-input" type="text" placeholder="Search any place…"
+           autocomplete="off" spellcheck="false" aria-label="Search for a place">
+    <ul class="search-results" id="search-results" hidden></ul>
+  </div>
   <div class="legend">
     <div class="legend-bar" id="legend-bar"></div>
     <div class="legend-ticks" id="legend-ticks"></div>
     <div class="legend-label">°C warmer today than 1850–1900</div>
   </div>
-  <p class="credit">Data: <a href="https://berkeleyearth.org" target="_blank" rel="noopener">Berkeley Earth</a> land + ocean, 0.25° grid</p>
+  <p class="credit">Data: <a href="https://berkeleyearth.org" target="_blank" rel="noopener">Berkeley Earth</a> land + ocean, 0.25° grid · Search © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></p>
 </header>
 
 <!-- First-visit hint -->
