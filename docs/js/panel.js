@@ -1,0 +1,188 @@
+// Location panel: place identity, headline warming stat, chart, facts.
+
+import { renderChart } from "./chart.js";
+import { warmingColor } from "./colors.js";
+import { reverseGeocode } from "./geocode.js";
+import { smoothSeries } from "./smooth.js";
+
+const el = {
+  panel: document.getElementById("panel"),
+  close: document.getElementById("panel-close"),
+  kicker: document.getElementById("place-kicker"),
+  name: document.getElementById("place-name"),
+  meta: document.getElementById("place-meta"),
+  headline: document.getElementById("headline"),
+  num: document.getElementById("headline-num"),
+  compare: document.getElementById("headline-compare"),
+  qmark: document.getElementById("quality-mark"),
+  chart: document.getElementById("chart"),
+  chartTitle: document.getElementById("chart-title"),
+  facts: document.getElementById("facts"),
+  footnote: document.getElementById("footnote"),
+  toggles: [...document.querySelectorAll(".toggle-btn")],
+};
+
+let mode = "anomaly";
+let current = null;   // { cell, years, smooth, lat, lon, seq }
+let seq = 0;
+let meta = null;
+let onCloseCb = null;
+
+export function initPanel(siteMeta, onClose) {
+  meta = siteMeta;
+  onCloseCb = onClose;
+  el.close.addEventListener("click", closePanel);
+  el.toggles.forEach((b) =>
+    b.addEventListener("click", () => {
+      mode = b.dataset.mode;
+      el.toggles.forEach((t) => {
+        t.classList.toggle("active", t === b);
+        t.setAttribute("aria-selected", t === b ? "true" : "false");
+      });
+      if (current) drawChart();
+    })
+  );
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closePanel();
+  });
+}
+
+export function closePanel() {
+  el.panel.classList.remove("open");
+  current = null;
+  if (onCloseCb) onCloseCb();
+}
+
+export function showLoading(lat, lon) {
+  seq++;
+  el.panel.hidden = false;
+  requestAnimationFrame(() => el.panel.classList.add("open"));
+  el.kicker.textContent = "locating";
+  el.name.textContent = "…";
+  el.name.classList.add("loading", "skel");
+  el.meta.innerHTML = `<span>${fmtLat(lat)}</span><span class="sep">·</span><span>${fmtLon(lon)}</span>`;
+  el.num.textContent = "—";
+  el.compare.textContent = "";
+  el.facts.innerHTML = "";
+  return seq;
+}
+
+export function showError(mySeq) {
+  if (mySeq !== seq) return;
+  el.name.classList.remove("loading", "skel");
+  el.kicker.textContent = "error";
+  el.name.textContent = "Couldn't load this cell";
+  el.chart.innerHTML = "";
+  el.footnote.textContent = "The data tile for this location failed to load. Check your connection and try again.";
+}
+
+export function showCell(mySeq, { lat, lon, cell }) {
+  if (mySeq !== seq) return;
+  const years = Array.from({ length: cell.nYears }, (_, i) => cell.startYear + i);
+  const smooth = smoothSeries(cell.series);
+  current = { cell, years, smooth, lat, lon };
+
+  // --- identity (geocode fills in async) ---
+  el.kicker.textContent = cell.land ? "land" : "ocean";
+  el.name.classList.remove("loading", "skel");
+  el.name.textContent = cell.land ? "Somewhere on land" : "Open ocean";
+  el.meta.innerHTML =
+    `<span>${fmtLat(lat)}</span><span class="sep">·</span><span>${fmtLon(lon)}</span>` +
+    `<span class="sep">·</span><span>0.25° cell</span>`;
+
+  reverseGeocode(lat, lon).then((g) => {
+    if (mySeq !== seq || !g) return;
+    if (cell.land) {
+      const bits = [g.locality, g.subdivision, g.country].filter(Boolean);
+      if (bits.length) {
+        el.name.textContent = bits[0];
+        el.kicker.textContent = bits.slice(1).join(", ") || "land";
+      }
+    } else if (g.water) {
+      el.name.textContent = g.water;
+      el.kicker.textContent = g.country ? `ocean · near ${g.country}` : "ocean";
+    } else if (g.country) {
+      el.kicker.textContent = `ocean · near ${g.country}`;
+    }
+  });
+
+  // --- headline stat ---
+  const w = cell.warming;
+  if (Number.isFinite(w)) {
+    const col = warmingColor(w);
+    el.headline.style.setProperty("--stat-color", col);
+    el.num.innerHTML = `${w > 0 ? "+" : ""}${w.toFixed(1)}<span class="unit"> °C</span>`;
+    const ratio = w / meta.globalMeanWarming;
+    el.compare.innerHTML =
+      `That's <strong>${ratio.toFixed(1)}×</strong> the global average of ` +
+      `<strong>+${meta.globalMeanWarming.toFixed(1)} °C</strong>`;
+  } else {
+    el.num.textContent = "n/a";
+    el.compare.textContent = "";
+  }
+  el.qmark.hidden = !(cell.qualityFlag & 1);
+
+  // --- facts grid ---
+  const annual = cell.series;
+  let hotYear = null, hot = -Infinity, n = 0;
+  annual.forEach((v, i) => {
+    if (!Number.isFinite(v)) return;
+    n++;
+    if (v > hot) { hot = v; hotYear = years[i]; }
+  });
+  const latest = [...annual].reverse().findIndex(Number.isFinite);
+  const latestIdx = latest === -1 ? null : annual.length - 1 - latest;
+  const absMean = Number.isFinite(cell.absOffset) && Number.isFinite(w)
+    ? smooth[smooth.length - 1] + cell.absOffset : NaN;
+
+  el.facts.innerHTML = "";
+  const facts = [];
+  if (hotYear !== null)
+    facts.push(["Warmest year", `${hotYear} <small>${fmtAnom(hot)} °C</small>`]);
+  if (latestIdx !== null)
+    facts.push([`${years[latestIdx]} anomaly`, `${fmtAnom(annual[latestIdx])} °C`]);
+  if (Number.isFinite(absMean))
+    facts.push(["Current avg. temp", `${absMean.toFixed(1)} °C <small>${(absMean * 9 / 5 + 32).toFixed(1)} °F</small>`]);
+  facts.push(["Years of data", `${n} <small>of ${cell.nYears}</small>`]);
+  for (const [dt, dd] of facts) {
+    const d = document.createElement("div");
+    d.innerHTML = `<dt>${dt}</dt><dd>${dd}</dd>`;
+    el.facts.appendChild(d);
+  }
+
+  // --- footnote ---
+  let note = `Anomalies relative to the ${meta.baseline[0]}–${meta.baseline[1]} average. ` +
+    `Smoothed curve: ~20-year local regression. Berkeley Earth ${meta.grid.cellDeg}° ` +
+    `land + ocean dataset, annual means through ${meta.endYear}.`;
+  if (cell.qualityFlag & 1)
+    note = `† Sparse early record here: the pre-1900 baseline is estimated from the ` +
+      `earliest available years, so the warming figure is less certain. ` + note;
+  el.footnote.textContent = note;
+
+  drawChart();
+}
+
+function drawChart() {
+  const { cell, years, smooth } = current;
+  const off = mode === "absolute" && Number.isFinite(cell.absOffset) ? cell.absOffset : 0;
+  const useAbs = mode === "absolute" && Number.isFinite(cell.absOffset);
+  el.chartTitle.textContent = useAbs
+    ? "Annual average temperature (°C)"
+    : "Annual anomaly vs 1850–1900 (°C)";
+  renderChart(el.chart, {
+    years,
+    annual: cell.series.map((v) => v + off),
+    smooth: smooth.map((v) => v + off),
+    unit: useAbs ? "absolute" : "anomaly",
+  });
+}
+
+function fmtAnom(v) {
+  return `${v > 0 ? "+" : ""}${v.toFixed(2)}`;
+}
+function fmtLat(lat) {
+  return `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? "N" : "S"}`;
+}
+function fmtLon(lon) {
+  return `${Math.abs(lon).toFixed(2)}°${lon >= 0 ? "E" : "W"}`;
+}

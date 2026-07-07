@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Warming Map — 175 Years of Temperature Change</title>
+<meta name="description" content="Click anywhere on Earth to see how temperatures have changed since 1850. Built on the Berkeley Earth 0.25° gridded dataset.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='%23e34948'/><circle cx='50' cy='50' r='42' fill='none' stroke='%23f0efec' stroke-width='6' stroke-dasharray='66 200'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="map" aria-label="World map of observed warming"></div>
+
+<!-- Title / legend card -->
+<header class="brand card">
+  <h1>The Warming Map</h1>
+  <p class="tagline">175 years of temperature change, anywhere on Earth</p>
+  <div class="legend">
+    <div class="legend-bar" id="legend-bar"></div>
+    <div class="legend-ticks" id="legend-ticks"></div>
+    <div class="legend-label">°C warmer today than 1850–1900</div>
+  </div>
+  <p class="credit">Data: <a href="https://berkeleyearth.org" target="_blank" rel="noopener">Berkeley Earth</a> land + ocean, 0.25° grid</p>
+</header>
+
+<!-- First-visit hint -->
+<div class="hint" id="hint" role="status">
+  <span class="hint-pulse"></span>
+  Click anywhere — any city, any stretch of ocean — to see its temperature history
+</div>
+
+<!-- Location panel -->
+<aside class="panel" id="panel" aria-live="polite" hidden>
+  <button class="panel-close" id="panel-close" aria-label="Close panel">×</button>
+  <div class="panel-scroll">
+    <div class="place">
+      <div class="place-kicker" id="place-kicker">—</div>
+      <h2 class="place-name" id="place-name">&nbsp;</h2>
+      <div class="place-meta" id="place-meta"></div>
+    </div>
+
+    <div class="headline" id="headline">
+      <div class="headline-value"><span id="headline-num">—</span></div>
+      <div class="headline-caption">of warming since 1850–1900<sup id="quality-mark" hidden>†</sup></div>
+      <div class="headline-compare" id="headline-compare"></div>
+    </div>
+
+    <div class="chart-head">
+      <h3 id="chart-title">Annual temperature</h3>
+      <div class="toggle" role="tablist" aria-label="Temperature units">
+        <button class="toggle-btn active" data-mode="anomaly" role="tab" aria-selected="true">Anomaly</button>
+        <button class="toggle-btn" data-mode="absolute" role="tab" aria-selected="false">Absolute</button>
+      </div>
+    </div>
+    <div class="chart-wrap" id="chart"></div>
+
+    <dl class="facts" id="facts"></dl>
+
+    <p class="footnote" id="footnote"></p>
+  </div>
+</aside>
+
+<div class="unsupported card" id="unsupported" hidden>
+  This map needs a recent browser (Chrome, Safari 16.4+, Firefox or Edge from 2023 on).
+</div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+{
+  "comment": "Single source of truth for the warming color scale and chart palette. Consumed by build_site_data.py (PNG overlay) and docs/js/colors.js (legend, chart). Diverging scale: cool blues below zero, neutral at zero, warm yellow->red->maroon above. Values in degC warming since 1850-1900.",
+  "warming_stops": [
+    { "value": -3.0, "hex": "#08306b" },
+    { "value": -2.0, "hex": "#1a5ca8" },
+    { "value": -1.0, "hex": "#3987e5" },
+    { "value": -0.5, "hex": "#9ec5f4" },
+    { "value":  0.0, "hex": "#f0efec" },
+    { "value":  0.5, "hex": "#fbd57e" },
+    { "value":  1.0, "hex": "#f8a952" },
+    { "value":  1.5, "hex": "#ef7550" },
+    { "value":  2.0, "hex": "#e34948" },
+    { "value":  2.5, "hex": "#c9303c" },
+    { "value":  3.0, "hex": "#a81f2e" },
+    { "value":  4.0, "hex": "#741024" },
+    { "value":  5.0, "hex": "#45071a" }
+  ],
+  "legend_range": [-1.0, 4.0],
+  "chart": {
+    "light": {
+      "surface": "#fcfcfb",
+      "page": "#f9f9f7",
+      "text_primary": "#0b0b0b",
+      "text_secondary": "#52514e",
+      "muted": "#898781",
+      "gridline": "#e1e0d9",
+      "baseline": "#c3c2b7",
+      "annual_line": "#9a9891",
+      "annual_dot": "#7a786f",
+      "smooth": "#c9303c",
+      "cool": "#2a78d6",
+      "border": "rgba(11,11,11,0.10)"
+    },
+    "dark": {
+      "surface": "#1a1a19",
+      "page": "#0d0d0d",
+      "text_primary": "#ffffff",
+      "text_secondary": "#c3c2b7",
+      "muted": "#898781",
+      "gridline": "#2c2c2a",
+      "baseline": "#383835",
+      "annual_line": "#6f6e68",
+      "annual_dot": "#8a8880",
+      "smooth": "#e66767",
+      "cool": "#3987e5",
+      "border": "rgba(255,255,255,0.10)"
+    }
+  }
+}

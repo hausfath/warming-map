@@ -1,0 +1,19 @@
+{
+ "startYear": 1850,
+ "endYear": 2025,
+ "nYears": 176,
+ "baseline": [
+  1850,
+  1900
+ ],
+ "sigmaYears": 7.0,
+ "grid": {
+  "nLat": 720,
+  "nLon": 1440,
+  "cellDeg": 0.25,
+  "tileCells": 16
+ },
+ "globalMeanWarming": 1.346,
+ "source": "Berkeley Earth Global_TAVG_Gridded_0p25deg",
+ "generated": "2026-07-07"
+}

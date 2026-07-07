@@ -1,0 +1,4 @@
+# Data tiles are binary; never diff, never mangle line endings, and NEVER
+# track with git-lfs (LFS objects are not served by GitHub Pages).
+*.bin.gz -text -diff
+*.png -text -diff
