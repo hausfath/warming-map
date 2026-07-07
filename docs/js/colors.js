@@ -39,8 +39,9 @@ function rgbStr(rgb) {
   return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
 }
 
-// Build the legend gradient + ticks for a value range.
-export function renderLegend(barEl, ticksEl, range) {
+// Build the legend gradient + ticks for a value range (range is always in
+// °C; tick labels are drawn in the display unit).
+export function renderLegend(barEl, ticksEl, range, unit = "C") {
   const [lo, hi] = range;
   const pieces = [];
   const n = 24;
@@ -50,9 +51,12 @@ export function renderLegend(barEl, ticksEl, range) {
   }
   barEl.style.background = `linear-gradient(90deg, ${pieces.join(",")})`;
   ticksEl.innerHTML = "";
-  for (let v = Math.ceil(lo); v <= Math.floor(hi); v++) {
+  const k = unit === "F" ? 9 / 5 : 1;             // anomaly scale, no offset
+  const dLo = lo * k, dHi = hi * k;
+  const step = unit === "F" ? 2 : 1;
+  for (let v = Math.ceil(dLo / step) * step; v <= Math.floor(dHi); v += step) {
     const span = document.createElement("span");
-    const pct = ((v - lo) / (hi - lo)) * 100;
+    const pct = ((v - dLo) / (dHi - dLo)) * 100;
     span.style.left = `${pct}%`;
     if (pct < 3) span.style.transform = "translateX(0)";
     else if (pct > 97) span.style.transform = "translateX(-100%)";

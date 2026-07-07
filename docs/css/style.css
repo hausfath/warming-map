@@ -192,11 +192,18 @@ html, body {
   color: var(--ink-3);
 }
 .legend-ticks span { position: absolute; transform: translateX(-50%); }
-.legend-label {
+.legend-row {
   margin-top: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.legend-label {
   font-size: 11px;
   color: var(--ink-2);
 }
+.toggle-sm .toggle-btn { padding: 3px 8px; font-size: 10.5px; font-family: var(--mono); }
 .credit {
   margin-top: 12px;
   padding-top: 10px;

@@ -8,9 +8,9 @@ const M = { top: 14, right: 14, bottom: 26, left: 40 };
 const NS = "http://www.w3.org/2000/svg";
 
 export function renderChart(el, data) {
-  // data: { years[], annual[], smooth[], unit ("anomaly"|"absolute"), baselineLabel }
+  // data: { years[], annual[], smooth[], unit ("anomaly"|"absolute"), sym ("°C"|"°F") }
   const c = chartColors();
-  const { years, annual, smooth, unit } = data;
+  const { years, annual, smooth, unit, sym = "°C" } = data;
   el.innerHTML = "";
 
   const finite = annual.filter(Number.isFinite).concat(smooth.filter(Number.isFinite));
@@ -108,7 +108,7 @@ export function renderChart(el, data) {
     cross.setAttribute("x1", cx); cross.setAttribute("x2", cx);
     cross.setAttribute("opacity", 1);
     show(dotA, cx, a); show(dotS, cx, s);
-    const u = unit === "anomaly" ? " °C" : " °C";
+    const u = ` ${sym}`;
     tip.innerHTML =
       `<span class="y">${yr}</span><br>` +
       (Number.isFinite(a) ? `<span class="a">${fmtVal(a, unit)}${u} annual</span><br>` : `<span class="y">no data</span><br>`) +

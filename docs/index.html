@@ -29,7 +29,13 @@
   <div class="legend">
     <div class="legend-bar" id="legend-bar"></div>
     <div class="legend-ticks" id="legend-ticks"></div>
-    <div class="legend-label">°C warmer today than 1850–1900</div>
+    <div class="legend-row">
+      <div class="legend-label" id="legend-label">°C warmer today than 1850–1900</div>
+      <div class="toggle toggle-sm" role="tablist" aria-label="Temperature unit" id="unit-toggle">
+        <button class="toggle-btn active" data-unit="C" role="tab" aria-selected="true">°C</button>
+        <button class="toggle-btn" data-unit="F" role="tab" aria-selected="false">°F</button>
+      </div>
+    </div>
   </div>
   <p class="credit">Data: <a href="https://berkeleyearth.org" target="_blank" rel="noopener">Berkeley Earth</a> land + ocean, 0.25° grid · Search © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></p>
 </header>

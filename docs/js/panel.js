@@ -4,6 +4,7 @@ import { renderChart } from "./chart.js";
 import { warmingColor } from "./colors.js";
 import { reverseGeocode } from "./geocode.js";
 import { smoothSeries } from "./smooth.js";
+import { degSym, convAnom, convAbs, onUnitChange } from "./units.js";
 
 const el = {
   panel: document.getElementById("panel"),
@@ -47,6 +48,7 @@ export function initPanel(siteMeta, onClose) {
     if (e.key === "Escape") closePanel();
   });
   el.csv.addEventListener("click", downloadCsv);
+  onUnitChange(() => { if (current) renderStats(); });
 }
 
 function downloadCsv() {
@@ -138,16 +140,22 @@ export function showCell(mySeq, { lat, lon, cell }) {
     }
   });
 
+  renderStats();
+}
+
+function renderStats() {
+  const { cell, years, smooth } = current;
+  const sym = degSym();
+
   // --- headline stat ---
   const w = cell.warming;
   if (Number.isFinite(w)) {
-    const col = warmingColor(w);
-    el.headline.style.setProperty("--stat-color", col);
-    el.num.innerHTML = `${w > 0 ? "+" : ""}${w.toFixed(1)}<span class="unit"> °C</span>`;
+    el.headline.style.setProperty("--stat-color", warmingColor(w));
+    el.num.innerHTML = `${fmtAnom(convAnom(w), 1)}<span class="unit"> ${sym}</span>`;
     const ratio = w / meta.globalMeanWarming;
     el.compare.innerHTML =
       `That's <strong>${ratio.toFixed(1)}×</strong> the global average of ` +
-      `<strong>+${meta.globalMeanWarming.toFixed(1)} °C</strong>`;
+      `<strong>${fmtAnom(convAnom(meta.globalMeanWarming), 1)} ${sym}</strong>`;
   } else {
     el.num.textContent = "n/a";
     el.compare.textContent = "";
@@ -170,11 +178,11 @@ export function showCell(mySeq, { lat, lon, cell }) {
   el.facts.innerHTML = "";
   const facts = [];
   if (hotYear !== null)
-    facts.push(["Warmest year", `${hotYear} <small>${fmtAnom(hot)} °C</small>`]);
+    facts.push(["Warmest year", `${hotYear} <small>${fmtAnom(convAnom(hot))} ${sym}</small>`]);
   if (latestIdx !== null)
-    facts.push([`${years[latestIdx]} anomaly`, `${fmtAnom(annual[latestIdx])} °C`]);
+    facts.push([`${years[latestIdx]} anomaly`, `${fmtAnom(convAnom(annual[latestIdx]))} ${sym}`]);
   if (Number.isFinite(absMean))
-    facts.push(["Current avg. temp", `${absMean.toFixed(1)} °C <small>${(absMean * 9 / 5 + 32).toFixed(1)} °F</small>`]);
+    facts.push(["Current avg. temp", `${convAbs(absMean).toFixed(1)} ${sym}`]);
   facts.push(["Years of data", `${n} <small>of ${cell.nYears}</small>`]);
   for (const [dt, dd] of facts) {
     const d = document.createElement("div");
@@ -185,7 +193,7 @@ export function showCell(mySeq, { lat, lon, cell }) {
   // --- footnote ---
   let note = `Anomalies relative to the ${meta.baseline[0]}–${meta.baseline[1]} average. ` +
     `Smoothed curve: ~20-year local regression. Berkeley Earth ${meta.grid.cellDeg}° ` +
-    `land + ocean dataset, annual means through ${meta.endYear}.`;
+    `land + ocean dataset, annual means through ${meta.endYear}. CSV downloads are in °C.`;
   if (cell.qualityFlag & 1)
     note = `† Sparse early record here: the pre-1900 baseline is estimated from the ` +
       `earliest available years, so the warming figure is less certain. ` + note;
@@ -196,21 +204,23 @@ export function showCell(mySeq, { lat, lon, cell }) {
 
 function drawChart() {
   const { cell, years, smooth } = current;
-  const off = mode === "absolute" && Number.isFinite(cell.absOffset) ? cell.absOffset : 0;
   const useAbs = mode === "absolute" && Number.isFinite(cell.absOffset);
+  const sym = degSym();
   el.chartTitle.textContent = useAbs
-    ? "Annual average temperature (°C)"
-    : "Annual anomaly vs 1850–1900 (°C)";
+    ? `Annual average temperature (${sym})`
+    : `Annual anomaly vs 1850–1900 (${sym})`;
+  const conv = useAbs ? (v) => convAbs(v + cell.absOffset) : (v) => convAnom(v);
   renderChart(el.chart, {
     years,
-    annual: cell.series.map((v) => v + off),
-    smooth: smooth.map((v) => v + off),
+    annual: cell.series.map(conv),
+    smooth: smooth.map(conv),
     unit: useAbs ? "absolute" : "anomaly",
+    sym,
   });
 }
 
-function fmtAnom(v) {
-  return `${v > 0 ? "+" : ""}${v.toFixed(2)}`;
+function fmtAnom(v, dec = 2) {
+  return `${v > 0 ? "+" : ""}${v.toFixed(dec)}`;
 }
 function fmtLat(lat) {
   return `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? "N" : "S"}`;

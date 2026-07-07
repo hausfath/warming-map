@@ -5,6 +5,7 @@ import { createMap, highlightCell, clearHighlight, flyToPlace } from "./map.js";
 import { initSearch } from "./search.js";
 import { getCell, cellFromLatLng, cellCenter, supported } from "./tiles.js";
 import { initPanel, showLoading, showCell, showError, closePanel } from "./panel.js";
+import { getUnit, setUnit, onUnitChange, degSym } from "./units.js";
 
 async function boot() {
   if (!supported()) {
@@ -17,11 +18,30 @@ async function boot() {
     fetch("data/meta.json").then((r) => r.json()),
   ]);
 
-  renderLegend(
-    document.getElementById("legend-bar"),
-    document.getElementById("legend-ticks"),
-    colorCfg.legend_range
-  );
+  const drawLegend = () => {
+    renderLegend(
+      document.getElementById("legend-bar"),
+      document.getElementById("legend-ticks"),
+      colorCfg.legend_range,
+      getUnit()
+    );
+    document.getElementById("legend-label").textContent =
+      `${degSym()} warmer today than 1850–1900`;
+  };
+  drawLegend();
+  onUnitChange(drawLegend);
+
+  const unitBtns = [...document.querySelectorAll("#unit-toggle .toggle-btn")];
+  const syncUnitBtns = () => unitBtns.forEach((b) => {
+    const on = b.dataset.unit === getUnit();
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  unitBtns.forEach((b) => b.addEventListener("click", () => {
+    setUnit(b.dataset.unit);
+    syncUnitBtns();
+  }));
+  syncUnitBtns(); // reflect persisted choice on load
 
   initPanel(meta, () => {
     clearHighlight();
