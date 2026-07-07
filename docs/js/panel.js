@@ -18,6 +18,7 @@ const el = {
   chart: document.getElementById("chart"),
   chartTitle: document.getElementById("chart-title"),
   facts: document.getElementById("facts"),
+  csv: document.getElementById("download-csv"),
   footnote: document.getElementById("footnote"),
   toggles: [...document.querySelectorAll(".toggle-btn")],
 };
@@ -45,6 +46,37 @@ export function initPanel(siteMeta, onClose) {
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closePanel();
   });
+  el.csv.addEventListener("click", downloadCsv);
+}
+
+function downloadCsv() {
+  if (!current) return;
+  const { cell, years, smooth, lat, lon } = current;
+  const place = el.name.textContent.trim();
+  const hasAbs = Number.isFinite(cell.absOffset);
+  const f = (v, off = 0) => (Number.isFinite(v) ? (v + off).toFixed(2) : "");
+  const lines = [
+    `# The Warming Map — https://hausfath.github.io/warming-map/#${lat.toFixed(3)},${lon.toFixed(3)}`,
+    `# Source: Berkeley Earth 0.25 degree gridded land+ocean temperature dataset`,
+    `# Location: ${place} (${fmtLat(lat)}, ${fmtLon(lon)}; 0.25 degree grid cell)`,
+    `# anomaly_C: annual mean temperature anomaly vs the 1850-1900 average`,
+    `# smoothed_C: ~20-year Gaussian local linear regression of the anomalies`,
+  ];
+  if (hasAbs) lines.push(`# absolute_C: estimated annual mean temperature (anomaly + climatology)`);
+  if (cell.qualityFlag & 1)
+    lines.push(`# note: sparse pre-1900 record; baseline estimated from earliest available years`);
+  lines.push(hasAbs ? "year,anomaly_C,smoothed_C,absolute_C" : "year,anomaly_C,smoothed_C");
+  for (let i = 0; i < years.length; i++) {
+    const row = [years[i], f(cell.series[i]), f(smooth[i])];
+    if (hasAbs) row.push(f(cell.series[i], cell.absOffset));
+    lines.push(row.join(","));
+  }
+  const slug = (place || "location").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([lines.join("\n") + "\n"], { type: "text/csv" }));
+  a.download = `warming_${slug}_${lat.toFixed(2)}_${lon.toFixed(2)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
 
 export function closePanel() {
@@ -132,8 +164,6 @@ export function showCell(mySeq, { lat, lon, cell }) {
   });
   const latest = [...annual].reverse().findIndex(Number.isFinite);
   const latestIdx = latest === -1 ? null : annual.length - 1 - latest;
-  const absMean = Number.isFinite(cell.absOffset) && Number.isFinite(w)
-    ? smooth[smooth.length - 1] + cell.absOffset : NaN;
 
   el.facts.innerHTML = "";
   const facts = [];
@@ -141,8 +171,8 @@ export function showCell(mySeq, { lat, lon, cell }) {
     facts.push(["Warmest year", `${hotYear} <small>${fmtAnom(hot)} °C</small>`]);
   if (latestIdx !== null)
     facts.push([`${years[latestIdx]} anomaly`, `${fmtAnom(annual[latestIdx])} °C`]);
-  if (Number.isFinite(absMean))
-    facts.push(["Current avg. temp", `${absMean.toFixed(1)} °C <small>${(absMean * 9 / 5 + 32).toFixed(1)} °F</small>`]);
+  if (Number.isFinite(w))
+    facts.push(["Warming since preindustrial", `${fmtAnom(w)} °C <small>${fmtAnom(w * 9 / 5)} °F</small>`]);
   facts.push(["Years of data", `${n} <small>of ${cell.nYears}</small>`]);
   for (const [dt, dd] of facts) {
     const d = document.createElement("div");

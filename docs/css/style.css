@@ -393,6 +393,23 @@ html, body {
 }
 .facts dd small { font-size: 11px; color: var(--ink-2); }
 
+.download {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border: 1px solid var(--hairline-2);
+  border-radius: 8px;
+  background: rgba(255,255,255,.03);
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.download:hover { color: var(--ink); background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.25); }
+
 .footnote {
   margin-top: 18px;
   font-size: 11px;

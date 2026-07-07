@@ -8,7 +8,15 @@ export function smoothSeries(values, sigma = SIGMA) {
   const n = values.length;
   const out = new Array(n).fill(NaN);
   const win = Math.round(2 * sigma);
+  // Never extrapolate: the local-linear fit projects its slope into years
+  // outside the observed record, which can dive steeply where the early
+  // record is short. Only evaluate within [first, last] observed year.
+  let first = -1, last = -1;
+  for (let i = 0; i < n; i++) {
+    if (Number.isFinite(values[i])) { if (first < 0) first = i; last = i; }
+  }
   for (let k = 0; k < n; k++) {
+    if (k < first || k > last) continue;
     let S0 = 0, S1 = 0, S2 = 0, Sy = 0, Sxy = 0, near = 0;
     for (let i = 0; i < n; i++) {
       const v = values[i];
