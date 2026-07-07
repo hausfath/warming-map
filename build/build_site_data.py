@@ -63,6 +63,12 @@ def compute_annual(ds):
     log(f"complete years: {years[0]}-{years[-1]} ({ny})")
 
     annual = np.full((ny, NLAT, NLON), np.nan, dtype=np.float32)
+    # Global-mean series from *monthly* means over all available cells (the
+    # canonical construction) — the per-cell complete-year requirement below
+    # would skew the sparse early sample and bias the 1850-1900 baseline.
+    coslat = np.cos(np.deg2rad(np.linspace(-89.875, 89.875, NLAT)))[:, None]
+    w2 = coslat * np.ones((NLAT, NLON))
+    gseries = np.full(ny, np.nan)
     v = ds["temperature"]
     for i, y in enumerate(years):
         j0 = int(np.searchsorted(yr, y))
@@ -70,9 +76,14 @@ def compute_annual(ds):
         valid = np.isfinite(block).all(axis=0)
         m = block.mean(axis=0)                        # NaN if any month NaN
         annual[i] = np.where(valid, m, np.nan)
+        gm = []
+        for k in range(12):
+            ok = np.isfinite(block[k])
+            gm.append((block[k][ok] * w2[ok]).sum() / w2[ok].sum())
+        gseries[i] = np.mean(gm)
         if (i + 1) % 25 == 0:
             log(f"  annual means {y} ({i + 1}/{ny})")
-    return np.array(years), annual
+    return np.array(years), annual, gseries
 
 
 # ------------------------------------------------------------------ rebaseline
@@ -239,10 +250,19 @@ def write_geo():
 
 
 # ------------------------------------------------------------------------ meta
-def write_meta(years, warming, land):
-    area = np.cos(np.deg2rad(np.linspace(-89.875, 89.875, NLAT)))[:, None]
-    wt = np.where(np.isfinite(warming), area * np.ones((NLAT, NLON)), 0.0)
-    gmean = float(np.nansum(np.where(np.isfinite(warming), warming, 0) * wt) / wt.sum())
+def write_meta(years, gseries, warming, land):
+    # Global warming level = the smoothed *global-mean series* endpoint, NOT
+    # the mean of per-cell smooths: 44% of cells lack an 1850-1900 baseline
+    # and use a later (warmer) fallback, which biases the cell-mean ~0.05 C
+    # low. The monthly-mean global series has near-full early coverage and
+    # matches the canonical Berkeley Earth global record (~1.4 C).
+    g = gseries - gseries[:PI1 - PI0 + 1].mean()
+    x = np.arange(len(g), dtype=float)
+    dx = x - x[-1]
+    w = np.exp(-0.5 * (dx / SIGMA) ** 2)
+    S0, S1, S2 = w.sum(), (w * dx).sum(), (w * dx * dx).sum()
+    gmean = float((S2 * (w * g).sum() - S1 * (w * dx * g).sum())
+                  / (S0 * S2 - S1 * S1))
     meta = {
         "startYear": int(years[0]),
         "endYear": int(years[-1]),
@@ -292,7 +312,7 @@ def main():
     t0 = _time.time()
     log(f"opening {NC}")
     ds = netCDF4.Dataset(NC)
-    years, annual = compute_annual(ds)
+    years, annual, gseries = compute_annual(ds)
     base, quality = rebaseline(years, annual)
     warming = warming_level(years, annual)
     absoff = abs_offset(ds, base)
@@ -300,7 +320,7 @@ def main():
     ds.close()
 
     dump_validation(years, annual, warming, absoff)
-    write_meta(years, warming, land)
+    write_meta(years, gseries, warming, land)
     write_png(warming)
     write_tiles(years, annual, warming, absoff, land, quality)
     write_geo()
