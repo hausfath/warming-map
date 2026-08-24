@@ -484,6 +484,96 @@ html, body {
   color: var(--ink-3);
 }
 
+/* ---------------------------------------------------------- csv gate */
+.gate-overlay[hidden] { display: none; }
+.gate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.gate {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  padding: 22px 24px 20px;
+}
+.gate-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+}
+.gate-title {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.gate-desc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  margin-bottom: 14px;
+}
+.gate-form {
+  display: flex;
+  gap: 8px;
+}
+.gate-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 11px;
+  border: 1px solid var(--hairline-2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.gate-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.gate-input::placeholder { color: var(--ink-3); }
+.gate-submit {
+  padding: 8px 15px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+}
+.gate-submit:hover { background: var(--accent-soft); }
+.gate-error {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--accent-soft);
+}
+.gate-signup {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+.gate-signup a {
+  color: var(--ink-2);
+  text-decoration: none;
+  border-bottom: 1px solid var(--hairline-2);
+}
+.gate-signup a:hover { color: var(--ink); }
+
 /* skeleton shimmer */
 .skel {
   position: relative;

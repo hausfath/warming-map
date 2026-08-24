@@ -22,7 +22,15 @@ const el = {
   csv: document.getElementById("download-csv"),
   footnote: document.getElementById("footnote"),
   toggles: [...document.querySelectorAll(".toggle-btn")],
+  gate: document.getElementById("gate"),
+  gateForm: document.getElementById("gate-form"),
+  gateInput: document.getElementById("gate-input"),
+  gateError: document.getElementById("gate-error"),
+  gateClose: document.getElementById("gate-close"),
 };
+
+const CSV_PASSWORD = "highres";
+const CSV_UNLOCK_KEY = "warmingMapCsvUnlocked";
 
 let mode = "anomaly";
 let current = null;   // { cell, years, smooth, lat, lon, seq }
@@ -45,10 +53,45 @@ export function initPanel(siteMeta, onClose) {
     })
   );
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closePanel();
+    if (e.key === "Escape") {
+      if (!el.gate.hidden) closeGate();
+      else closePanel();
+    }
   });
-  el.csv.addEventListener("click", downloadCsv);
+  el.csv.addEventListener("click", requestCsvDownload);
+  el.gateClose.addEventListener("click", closeGate);
+  el.gate.addEventListener("click", (e) => {
+    if (e.target === el.gate) closeGate();
+  });
+  el.gateForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (el.gateInput.value.trim() === CSV_PASSWORD) {
+      try { localStorage.setItem(CSV_UNLOCK_KEY, "1"); } catch {}
+      closeGate();
+      downloadCsv();
+    } else {
+      el.gateError.hidden = false;
+      el.gateInput.select();
+    }
+  });
   onUnitChange(() => { if (current) renderStats(); });
+}
+
+function csvUnlocked() {
+  try { return localStorage.getItem(CSV_UNLOCK_KEY) === "1"; } catch { return false; }
+}
+
+function requestCsvDownload() {
+  if (!current) return;
+  if (csvUnlocked()) { downloadCsv(); return; }
+  el.gateError.hidden = true;
+  el.gateInput.value = "";
+  el.gate.hidden = false;
+  el.gateInput.focus();
+}
+
+function closeGate() {
+  el.gate.hidden = true;
 }
 
 function downloadCsv() {

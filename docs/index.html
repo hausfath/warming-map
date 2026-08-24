@@ -82,6 +82,22 @@
   </div>
 </aside>
 
+<!-- CSV download password gate -->
+<div class="gate-overlay" id="gate" hidden>
+  <div class="gate card" role="dialog" aria-modal="true" aria-labelledby="gate-title">
+    <button class="panel-close gate-close" id="gate-close" aria-label="Close dialog">×</button>
+    <h3 class="gate-title" id="gate-title">Data download access</h3>
+    <p class="gate-desc">CSV downloads require a password. Enter it below to unlock downloads on this device.</p>
+    <form class="gate-form" id="gate-form">
+      <input class="gate-input" id="gate-input" type="password" placeholder="Password"
+             autocomplete="off" spellcheck="false" aria-label="Download password">
+      <button class="gate-submit" type="submit">Unlock</button>
+    </form>
+    <p class="gate-error" id="gate-error" hidden>That password isn't right. Please try again.</p>
+    <p class="gate-signup">Don't have a password yet? <a href="https://forms.gle/1zbUUmT5D9uGR4RU7" target="_blank" rel="noopener">Sign up for free access</a> and one will be sent to you.</p>
+  </div>
+</div>
+
 <div class="unsupported card" id="unsupported" hidden>
   This map needs a recent browser (Chrome, Safari 16.4+, Firefox or Edge from 2023 on).
 </div>
