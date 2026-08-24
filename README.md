@@ -28,6 +28,9 @@ no libraries beyond Leaflet.
 - **Permalinks** — `#lat,lon` in the URL opens a location directly.
 - Cells where fewer than 25 valid years exist in 1850–1900 use a fallback
   baseline (earliest available years) and are flagged with a caveat (†).
+- Cells with fewer than 50 valid annual values overall are left uncolored
+  on the map (their smoothed warming level is too noisy — sparse Southern
+  Ocean cells especially) but remain clickable with a full chart.
 
 ## Rebuilding the data
 

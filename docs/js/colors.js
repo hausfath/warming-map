@@ -1,6 +1,8 @@
 // Warming color ramp — stops loaded from data/colors.json (single source of
 // truth shared with the Python build; the PNG overlay uses the same stops).
 
+import { getTheme } from "./theme.js";
+
 let stops = null;
 let chart = null;
 
@@ -12,8 +14,8 @@ export async function initColors() {
 }
 
 export function chartColors() {
-  // The site is a committed dark theme; the light block exists for reuse.
-  return chart.dark;
+  // Standalone the site is committed dark; embed mode can flip to light.
+  return chart[getTheme()] || chart.dark;
 }
 
 function hexToRgb(h) {

@@ -21,6 +21,14 @@ Anomalies are rebaselined to 1850-1900 (>=25 valid years required, else
 fallback to the mean of the earliest <=51 valid years, flagged).
 "Current warming level" = Gaussian-kernel local linear regression
 (sigma = 7 yr, ~20-yr effective window) evaluated at the final year.
+
+The overlay PNG leaves cells with fewer than MIN_MAP_YEARS valid annual
+values uncolored (transparent): their smoothed endpoint is too noisy to
+map (sparse Southern Ocean cells especially). The tiles are unaffected,
+so those cells stay clickable and chartable.
+
+Usage: build_site_data.py [--png-only]   (--png-only rewrites just the
+overlay PNG + meta/validation, leaving tiles and geo untouched)
 """
 import gzip
 import json
@@ -40,6 +48,7 @@ DOCS = os.path.join(ROOT, "docs")
 Y0, Y1 = 1850, None          # Y1 = last complete year, found from file
 PI0, PI1 = 1850, 1900        # baseline period (inclusive)
 MIN_BASE_YEARS = 25
+MIN_MAP_YEARS = 50           # cells with fewer valid years are not colored
 SIGMA = 7.0                  # Gaussian local-linear smoothing, years
 NLAT, NLON = 720, 1440
 TILE = 16
@@ -196,7 +205,7 @@ def hex_to_rgb(h):
     return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
 
 
-def write_png(warming):
+def write_png(warming, nyears):
     from PIL import Image
     stops = json.load(open(os.path.join(HERE, "colors.json")))["warming_stops"]
     vals = np.array([s["value"] for s in stops])
@@ -204,11 +213,14 @@ def write_png(warming):
 
     w = warming.astype(np.float64)
     finite = np.isfinite(w)
-    wc = np.clip(np.where(finite, w, 0.0), vals[0], vals[-1])
+    shown = finite & (nyears >= MIN_MAP_YEARS)
+    log(f"overlay: {int(finite.sum()):,} cells with a warming level, "
+        f"{int((finite & ~shown).sum()):,} left uncolored (<{MIN_MAP_YEARS} yr)")
+    wc = np.clip(np.where(shown, w, 0.0), vals[0], vals[-1])
     rgba = np.zeros((NLAT, NLON, 4), dtype=np.uint8)
     for c in range(3):
         rgba[..., c] = np.interp(wc, vals, cols[:, c]).round().astype(np.uint8)
-    rgba[..., 3] = np.where(finite, 255, 0)
+    rgba[..., 3] = np.where(shown, 255, 0)
     rgba = rgba[::-1]                                  # row 0 = 90N
     os.makedirs(os.path.join(DOCS, "overlay"), exist_ok=True)
     img = Image.fromarray(rgba, "RGBA")
@@ -309,6 +321,7 @@ def dump_validation(years, annual, warming, absoff):
 
 
 def main():
+    png_only = "--png-only" in sys.argv[1:]
     t0 = _time.time()
     log(f"opening {NC}")
     ds = netCDF4.Dataset(NC)
@@ -318,12 +331,14 @@ def main():
     absoff = abs_offset(ds, base)
     land = ds["land_mask"][:].filled(0.0)
     ds.close()
+    nyears = np.isfinite(annual).sum(axis=0)
 
     dump_validation(years, annual, warming, absoff)
     write_meta(years, gseries, warming, land)
-    write_png(warming)
-    write_tiles(years, annual, warming, absoff, land, quality)
-    write_geo()
+    write_png(warming, nyears)
+    if not png_only:
+        write_tiles(years, annual, warming, absoff, land, quality)
+        write_geo()
     log(f"done in {(_time.time() - t0) / 60:.1f} min")
 
 

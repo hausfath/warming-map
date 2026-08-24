@@ -5,6 +5,7 @@ import { warmingColor } from "./colors.js";
 import { reverseGeocode } from "./geocode.js";
 import { smoothSeries } from "./smooth.js";
 import { degSym, convAnom, convAbs, onUnitChange } from "./units.js";
+import { onThemeChange } from "./theme.js";
 
 const el = {
   panel: document.getElementById("panel"),
@@ -75,6 +76,7 @@ export function initPanel(siteMeta, onClose) {
     }
   });
   onUnitChange(() => { if (current) renderStats(); });
+  onThemeChange(() => { if (current) drawChart(); });
 }
 
 function csvUnlocked() {

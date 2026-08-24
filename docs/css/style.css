@@ -18,10 +18,84 @@
   --grid:          rgba(255, 255, 255, 0.07);
   --shadow:        0 12px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
   --radius:        14px;
+  --overlay-1:     rgba(255, 255, 255, 0.04);   /* subtle fills */
+  --overlay-2:     rgba(255, 255, 255, 0.09);   /* hover / active fills */
+  --focus-ring:    rgba(255, 255, 255, 0.30);
+  --surface-hover: rgba(35, 39, 37, 0.95);
+  --cell-hl:       #ffffff;
+  --map-bg: radial-gradient(120% 90% at 50% 10%, #131817 0%, #0e1110 60%, #0a0c0b 100%);
   --sans: "IBM Plex Sans", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, monospace;
   --serif: "Fraunces", Georgia, serif;
 }
+
+/* Light theme (embed mode; also reachable standalone via ?theme=light) */
+body.light {
+  --bg:            #f4f3ef;
+  --surface:       rgba(252, 252, 251, 0.92);
+  --surface-solid: #fcfcfb;
+  --ink:           #16161a;
+  --ink-2:         #52514e;
+  --ink-3:         #898781;
+  --hairline:      rgba(11, 11, 11, 0.10);
+  --hairline-2:    rgba(11, 11, 11, 0.18);
+  --accent:        #c9303c;
+  --accent-soft:   #e05555;
+  --cool:          #2a78d6;
+  --grid:          rgba(11, 11, 11, 0.06);
+  --shadow:        0 12px 40px rgba(40, 40, 35, 0.16), 0 2px 8px rgba(40, 40, 35, 0.10);
+  --overlay-1:     rgba(11, 11, 11, 0.04);
+  --overlay-2:     rgba(11, 11, 11, 0.08);
+  --focus-ring:    rgba(11, 11, 11, 0.30);
+  --surface-hover: rgba(235, 234, 228, 0.95);
+  --cell-hl:       #16161a;
+  --map-bg: radial-gradient(120% 90% at 50% 10%, #fbfaf7 0%, #f0efe9 60%, #e5e4dc 100%);
+}
+
+/* Embed mode: chrome restyled to the Climate Dashboard's design tokens
+   (assets/theme.css over there is the source of truth). Data colors —
+   the warming ramp and chart palette — stay the map's own. */
+body.embed {
+  --bg:            #0b0e1a;
+  --surface:       rgba(21, 26, 48, 0.90);
+  --surface-solid: #151a30;
+  --ink:           #e8eaf2;
+  --ink-2:         #9aa0b8;
+  --ink-3:         #61677f;
+  --hairline:      rgba(232, 234, 242, 0.08);
+  --hairline-2:    rgba(232, 234, 242, 0.16);
+  --grid:          rgba(232, 234, 242, 0.07);
+  --shadow:        0 18px 40px -24px rgba(0, 0, 0, 0.7);
+  --surface-hover: rgba(31, 38, 66, 0.95);
+  --map-bg: radial-gradient(120% 90% at 50% 10%, #12162a 0%, #0b0e1a 60%, #080a14 100%);
+  --serif: "Bricolage Grotesque", "IBM Plex Sans", system-ui, sans-serif;
+}
+body.embed.light {
+  --bg:            #faf9f6;
+  --surface:       rgba(255, 255, 255, 0.92);
+  --surface-solid: #ffffff;
+  --ink:           #1f2430;
+  --ink-2:         #5a6172;
+  --ink-3:         #9198a8;
+  --hairline:      rgba(31, 36, 48, 0.10);
+  --hairline-2:    rgba(31, 36, 48, 0.20);
+  --grid:          rgba(31, 36, 48, 0.06);
+  --shadow:        0 14px 32px -22px rgba(31, 36, 48, 0.35);
+  --overlay-1:     rgba(31, 36, 48, 0.04);
+  --overlay-2:     rgba(31, 36, 48, 0.08);
+  --focus-ring:    rgba(31, 36, 48, 0.30);
+  --surface-hover: rgba(240, 239, 234, 0.95);
+  --cell-hl:       #1f2430;
+  --map-bg: radial-gradient(120% 90% at 50% 10%, #ffffff 0%, #f5f4ef 60%, #eceae2 100%);
+}
+
+/* Slimmer chrome inside the dashboard: the tab supplies title context and
+   the topbar owns the °C/°F toggle. */
+body.embed .brand h1,
+body.embed .brand .tagline,
+body.embed #unit-toggle { display: none; }
+body.embed .brand { padding: 14px 16px 12px; }
+body.embed .search { margin-top: 0; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -37,8 +111,7 @@ html, body {
 #map {
   position: fixed;
   inset: 0;
-  background:
-    radial-gradient(120% 90% at 50% 10%, #131817 0%, #0e1110 60%, #0a0c0b 100%);
+  background: var(--map-bg);
   cursor: crosshair;
   outline: none;
 }
@@ -67,8 +140,8 @@ html, body {
   backdrop-filter: blur(12px);
   transition: color .15s, background .15s;
 }
-.leaflet-bar a:hover { color: var(--ink) !important; background: rgba(35,39,37,.95) !important; }
-.leaflet-bar a.leaflet-disabled { color: #4a4a44 !important; }
+.leaflet-bar a:hover { color: var(--ink) !important; background: var(--surface-hover) !important; }
+.leaflet-bar a.leaflet-disabled { color: var(--ink-3) !important; opacity: .6; }
 
 .cell-highlight {
   animation: cellIn .25s cubic-bezier(.2,.9,.3,1.2);
@@ -132,7 +205,7 @@ html, body {
 #search-input {
   width: 100%;
   padding: 8px 12px 8px 32px;
-  background: rgba(255,255,255,.05);
+  background: var(--overlay-1);
   border: 1px solid var(--hairline-2);
   border-radius: 9px;
   color: var(--ink);
@@ -143,8 +216,8 @@ html, body {
 }
 #search-input::placeholder { color: var(--ink-3); }
 #search-input:focus {
-  border-color: rgba(255,255,255,.3);
-  background: rgba(255,255,255,.08);
+  border-color: var(--focus-ring);
+  background: var(--overlay-2);
 }
 .search-results {
   position: absolute;
@@ -168,7 +241,7 @@ html, body {
   border-bottom: 1px solid var(--hairline);
 }
 .search-results li:last-child { border-bottom: 0; }
-.search-results li.active { background: rgba(255,255,255,.08); }
+.search-results li.active { background: var(--overlay-2); }
 .search-results .sr-main { color: var(--ink); font-weight: 500; }
 .search-results .sr-rest { color: var(--ink-3); font-size: 11px; }
 .search-results .search-empty {
@@ -289,14 +362,14 @@ html, body {
   width: 32px; height: 32px;
   border-radius: 50%;
   border: 1px solid var(--hairline);
-  background: rgba(255,255,255,.04);
+  background: var(--overlay-1);
   color: var(--ink-2);
   font-size: 19px;
   line-height: 1;
   cursor: pointer;
   transition: all .15s;
 }
-.panel-close:hover { color: var(--ink); background: rgba(255,255,255,.09); }
+.panel-close:hover { color: var(--ink); background: var(--overlay-2); }
 
 /* place block */
 .place-kicker {
@@ -335,7 +408,7 @@ html, body {
   border-radius: 12px;
   background:
     linear-gradient(135deg, rgba(227,73,72,.10), rgba(227,73,72,.02) 55%),
-    rgba(255,255,255,.02);
+    var(--overlay-1);
   position: relative;
   overflow: hidden;
 }
@@ -401,7 +474,7 @@ html, body {
   transition: all .15s;
 }
 .toggle-btn + .toggle-btn { border-left: 1px solid var(--hairline); }
-.toggle-btn.active { background: rgba(255,255,255,.10); color: var(--ink); }
+.toggle-btn.active { background: var(--overlay-2); color: var(--ink); }
 
 .chart-wrap {
   margin-top: 10px;
@@ -468,14 +541,14 @@ html, body {
   padding: 8px 13px;
   border: 1px solid var(--hairline-2);
   border-radius: 8px;
-  background: rgba(255,255,255,.03);
+  background: var(--overlay-1);
   color: var(--ink-2);
   font-family: var(--mono);
   font-size: 11px;
   cursor: pointer;
   transition: all .15s;
 }
-.download:hover { color: var(--ink); background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.25); }
+.download:hover { color: var(--ink); background: var(--overlay-2); border-color: var(--focus-ring); }
 
 .footnote {
   margin-top: 18px;
@@ -531,14 +604,14 @@ html, body {
   padding: 8px 11px;
   border: 1px solid var(--hairline-2);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--overlay-1);
   color: var(--ink);
   font-family: var(--mono);
   font-size: 13px;
 }
 .gate-input:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.35);
+  border-color: var(--focus-ring);
 }
 .gate-input::placeholder { color: var(--ink-3); }
 .gate-submit {
@@ -578,7 +651,7 @@ html, body {
 .skel {
   position: relative;
   overflow: hidden;
-  background: rgba(255,255,255,.05);
+  background: var(--overlay-1);
   border-radius: 6px;
   color: transparent !important;
 }

@@ -6,8 +6,10 @@ import { initSearch } from "./search.js";
 import { getCell, cellFromLatLng, cellCenter, supported } from "./tiles.js";
 import { initPanel, showLoading, showCell, showError, closePanel } from "./panel.js";
 import { getUnit, setUnit, onUnitChange, degSym } from "./units.js";
+import { initTheme } from "./theme.js";
 
 async function boot() {
+  initTheme();
   if (!supported()) {
     document.getElementById("unsupported").hidden = false;
     return;
@@ -42,6 +44,7 @@ async function boot() {
     syncUnitBtns();
   }));
   syncUnitBtns(); // reflect persisted choice on load
+  onUnitChange(syncUnitBtns); // embed: parent page can drive the unit
 
   initPanel(meta, () => {
     clearHighlight();

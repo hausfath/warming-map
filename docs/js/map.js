@@ -57,11 +57,14 @@ function fitWorld() {
 export function highlightCell(cy, cx) {
   const bounds = cellBounds(cy, cx);
   if (highlight) highlight.remove();
+  // Read at call time so an embed-mode theme flip picks up the new color.
+  const hl = getComputedStyle(document.body)
+    .getPropertyValue("--cell-hl").trim() || "#ffffff";
   highlight = L.rectangle(bounds, {
     className: "cell-highlight",
-    color: "#ffffff",
+    color: hl,
     weight: 1.6,
-    fillColor: "#ffffff",
+    fillColor: hl,
     fillOpacity: 0.12,
     interactive: false,
   }).addTo(map);
