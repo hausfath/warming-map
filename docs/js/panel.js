@@ -195,7 +195,11 @@ function renderStats() {
   // --- headline stat ---
   const w = cell.warming;
   if (Number.isFinite(w)) {
-    el.headline.style.setProperty("--stat-color", warmingColor(w));
+    // Clamp the headline color to the readable middle of the ramp — at the
+    // extremes (deep maroon beyond ~+3, deep blue below ~-1) the exact ramp
+    // color disappears against the panel background.
+    el.headline.style.setProperty(
+      "--stat-color", warmingColor(Math.max(-1.2, Math.min(w, 2.6))));
     el.num.innerHTML = `${fmtAnom(convAnom(w), 1)}<span class="unit"> ${sym}</span>`;
     const ratio = w / meta.globalMeanWarming;
     el.compare.innerHTML =
